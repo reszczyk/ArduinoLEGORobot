@@ -1,5 +1,4 @@
 #include <NewPing.h>
-#include <Stepper.h>
 #include <Servo.h>
 
 //Silniki
@@ -21,16 +20,12 @@ int servoAngle = 0;
 Servo servo;
 
 //Przycisk
-#define BUTTON 22
+#define BUTTON 2
 
-//Dioda
-#define LED 3
 
 void setup() {
   Serial.begin(9600);
   pinMode(BUTTON, INPUT_PULLUP); //Przycisk
-  pinMode(LED, OUTPUT); //Dioda
-  digitalWrite(LED, LOW);
   
   pinMode(motor1_dir,OUTPUT);
   pinMode(motor1_pwm,OUTPUT);
@@ -42,28 +37,34 @@ void setup() {
 
 void ServoFront()
 {
+  delay(20);
   servo.write(80);
+  delay(20);
 }
 
 void ServoLeft()
 {
-  servo.write(130);
+  delay(20);
+  servo.write(50);
+  delay(20);
 }
 
 void ServoRight()
 {
-  servo.write(50);
+  delay(20);
+  servo.write(130);
+  delay(20);
 }
 
 bool CheckIfObstacle()
 {
   if (frontSonar.ping_cm() <= 30 && frontSonar.ping_cm() != 0 )
   {
-    return false;
+    return true;
   }
   else if (frontSonar.ping_cm() > 30 || frontSonar.ping_cm() == 0) 
   {
-    return true;
+    return false;
   }
 }
 
@@ -81,16 +82,14 @@ void RunForward()
   analogWrite(motor1_pwm,0);
   digitalWrite(motor2_dir,HIGH);
   analogWrite(motor2_pwm,0);
-  delay(100);
 }
 
 void RunBackward()
 {
   digitalWrite(motor1_dir,LOW);
-  analogWrite(motor1_pwm,100);
+  analogWrite(motor1_pwm,255);
   digitalWrite(motor2_dir,LOW);
-  analogWrite(motor2_pwm,100);
-  delay(100);
+  analogWrite(motor2_pwm,255);
 }
 
 void StopMotors()
@@ -103,50 +102,42 @@ void StopMotors()
 
 
 void RunMotor()
-{  
-  if (CheckIfObstacle() == false)
+{ 
+  if (POWER == false)
+  {
+    StopMotors();
+  }
+  else if (POWER == true)
+  {
+    if (CheckIfObstacle() == true)
     {
-      ServoLeft();
-      RunBackward();
-      delay(500);
+      StopMotors();
+      delay(20);
       ServoRight();
-      RunForward();
-      delay(100);
-      ServoLeft();
       RunBackward();
-      delay(500);
+      delay(200);
     }
-  else if (CheckIfObstacle() == true)
+    else if (CheckIfObstacle() == false)
     {
       ServoFront();
       RunForward();
     }
+   }
 }
 
-void LightLed()
-{
-  if (POWER == 0)
-  {
-    digitalWrite(LED, LOW);
-  }
-  else if (POWER == 1)
-  {
-    digitalWrite(LED, HIGH);
-  }
-}
 
 void PowerOn()
 {
-  if (digitalRead(22) == LOW && POWER == 0) //Jeśli przycisk wciśnięty
+  if (digitalRead(BUTTON) == LOW && POWER == false) //Jeśli przycisk wciśnięty
   { 
+      ServoFront();
       POWER = true;
-      delay(500);
+      delay(20);
   }
 }
 
 void loop() {
-  LightLed();
+  PowerOn();
   RunMotor();
-  CheckDistance();
   Serial.print(POWER);
 }
