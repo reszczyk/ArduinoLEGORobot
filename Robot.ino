@@ -25,7 +25,7 @@ Servo servo;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(BUTTON, INPUT_PULLUP); //Przycisk
+  pinMode(BUTTON, INPUT_PULLUP);
   
   pinMode(motor1_dir,OUTPUT);
   pinMode(motor1_pwm,OUTPUT);
@@ -52,7 +52,7 @@ void ServoLeft()
 void ServoRight()
 {
   delay(20);
-  servo.write(130);
+  servo.write(110);
   delay(20);
 }
 
@@ -100,6 +100,14 @@ void StopMotors()
   analogWrite(motor2_pwm,0);
 }
 
+void BypassObstacle()
+{
+  StopMotors();
+  delay(20);
+  ServoRight();
+  RunBackward();
+  delay(1000);
+}
 
 void RunMotor()
 { 
@@ -109,26 +117,22 @@ void RunMotor()
   }
   else if (POWER == true)
   {
-    if (CheckIfObstacle() == true)
-    {
-      StopMotors();
-      delay(20);
-      ServoRight();
-      RunBackward();
-      delay(200);
-    }
-    else if (CheckIfObstacle() == false)
-    {
-      ServoFront();
-      RunForward();
-    }
+      if (CheckIfObstacle() == true)
+      {
+        BypassObstacle();
+      }
+      else if (CheckIfObstacle() == false)
+      {
+        ServoFront();
+        RunForward();
+      }
    }
 }
 
 
 void PowerOn()
 {
-  if (digitalRead(BUTTON) == LOW && POWER == false) //Jeśli przycisk wciśnięty
+  if (digitalRead(BUTTON) == LOW && POWER == false)
   { 
       ServoFront();
       POWER = true;
@@ -139,5 +143,4 @@ void PowerOn()
 void loop() {
   PowerOn();
   RunMotor();
-  Serial.print(POWER);
 }
